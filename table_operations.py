@@ -1,6 +1,6 @@
 import json
 from psycopg2 import sql
-from schema_utils import get_column_definitions
+from schema_utils import get_column_definitions, process_value
 import logging
 
 def drop_table(cursor, table_name):
@@ -29,7 +29,7 @@ def ensure_columns(cursor, table_name, json_obj):
 
 def insert_data(cursor, table_name, json_obj):
     columns = [key.lower() for key in json_obj.keys()]
-    values = [json.dumps(value) if isinstance(value, (dict, list)) else value for value in json_obj.values()]
+    values = [process_value(value) for value in json_obj.values()]
     insert_query = sql.SQL("INSERT INTO {table} ({fields}) VALUES ({values})").format(
         table=sql.Identifier(table_name),
         fields=sql.SQL(", ").join(map(sql.Identifier, columns)),

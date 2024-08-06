@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 
 def get_column_definitions(json_obj):
     columns = {}
@@ -23,3 +24,10 @@ def get_column_definitions(json_obj):
             columns[column_name] = "JSONB"
     logging.info(f"Generated columns: {columns}")
     return columns
+
+def process_value(value):
+    if isinstance(value, dict) and "$date" in value:
+        return datetime.fromisoformat(value["$date"].replace("Z", "+00:00"))
+    elif isinstance(value, dict) or isinstance(value, list):
+        return json.dumps(value)
+    return value
