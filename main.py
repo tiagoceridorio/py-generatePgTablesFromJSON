@@ -1,6 +1,6 @@
 import json
 from db_connection import get_db_connection
-from table_operations import create_table, ensure_columns, insert_data
+from table_operations import ensure_columns, insert_data
 
 def process_json_file(file_path, conn):
     with open(file_path, 'r') as file:
@@ -12,10 +12,9 @@ def process_json_file(file_path, conn):
             process_json_record(data, conn)
 
 def process_json_record(record, conn):
-    table_name = "orders"  # You can change this to a more appropriate table name
+    table_name = "orders"  # Você pode mudar isso para um nome de tabela mais apropriado
     with conn.cursor() as cursor:
         columns = ensure_columns(cursor, table_name, record)
-        create_table(cursor, table_name, columns)
         insert_data(cursor, table_name, record)
     conn.commit()
 

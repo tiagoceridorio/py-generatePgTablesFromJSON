@@ -14,6 +14,7 @@ def add_columns(cursor, table_name, columns):
 
 def ensure_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
+    create_table(cursor, table_name, columns)  # Certifique-se de que a tabela é criada antes de adicionar colunas
     add_columns(cursor, table_name, columns)
     return columns
 
