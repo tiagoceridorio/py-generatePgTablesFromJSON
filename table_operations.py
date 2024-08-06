@@ -22,8 +22,6 @@ def add_columns(cursor, table_name, columns):
 
 def ensure_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
-    drop_table(cursor, table_name)  # Drop the table if it exists
-    create_table(cursor, table_name, columns)  # Certifique-se de que a tabela é criada antes de adicionar colunas
     add_columns(cursor, table_name, columns)
     return columns
 
@@ -37,3 +35,36 @@ def insert_data(cursor, table_name, json_obj):
     )
     logging.info(f"Inserting data with query: {insert_query.as_string(cursor)}")
     cursor.execute(insert_query, values)
+
+def initialize_table(cursor, table_name):
+    columns = {
+        "_id": "VARCHAR",
+        "cartid": "VARCHAR",
+        "ismobile": "BOOLEAN",
+        "ip": "TEXT",
+        "store": "JSONB",
+        "customer": "JSONB",
+        "sellers": "JSONB",
+        "items": "JSONB",
+        "volumes": "JSONB",
+        "payment": "JSONB",
+        "refundrules": "JSONB",
+        "stateregistration": "TEXT",
+        "createdinadmin": "BOOLEAN",
+        "adminid": "TEXT",
+        "ordersiteid": "TEXT",
+        "date": "TIMESTAMP",
+        "documenttype": "TEXT",
+        "iscrisis": "BOOLEAN",
+        "iscrisismarketing": "BOOLEAN",
+        "isinternational": "BOOLEAN",
+        "itemscount": "INT",
+        "ordersource": "TEXT",
+        "searchkey": "TEXT",
+        "status": "TEXT",
+        "values": "JSONB",
+        "cubbo": "JSONB",
+        "history": "JSONB"
+    }
+    drop_table(cursor, table_name)
+    create_table(cursor, table_name, columns)
