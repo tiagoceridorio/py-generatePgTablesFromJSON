@@ -22,8 +22,6 @@ def get_column_definitions(json_obj):
             columns[column_name] = "FLOAT"
         elif isinstance(value, str):
             columns[column_name] = "TEXT"
-        elif isinstance(value, list) or isinstance(value, dict):
-            columns[column_name] = "JSONB"
         else:
             columns[column_name] = "JSONB"
     logger.info(f"Generated columns: {columns}")
@@ -31,10 +29,7 @@ def get_column_definitions(json_obj):
 
 def process_value(value):
     if isinstance(value, dict) and "$date" in value:
-        try:
-            return datetime.fromisoformat(value["$date"].replace("Z", "+00:00"))
-        except ValueError:
-            return value["$date"]
+        return datetime.fromisoformat(value["$date"].replace("Z", "+00:00"))
     elif isinstance(value, dict) or isinstance(value, list):
         return json.dumps(value)
     return value
