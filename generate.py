@@ -1,7 +1,6 @@
 import json
 import psycopg2
 from psycopg2 import sql
-import os
 
 def create_table(cursor, table_name, columns):
     column_defs = ", ".join([f"{col} {dtype}" for col, dtype in columns.items()])
@@ -56,13 +55,21 @@ def process_json_record(record, conn):
         insert_data(cursor, table_name, record)
     conn.commit()
 
+def load_db_config(config_file):
+    with open(config_file, 'r') as file:
+        config = json.load(file)
+    return config
+
 def main():
+    config_file = "config.json"
+    db_config = load_db_config(config_file)
+    
     conn = psycopg2.connect(
-        dbname="your_dbname",
-        user="your_dbuser",
-        password="your_dbpassword",
-        host="your_dbhost",
-        port="your_dbport"
+        dbname=db_config["dbname"],
+        user=db_config["user"],
+        password=db_config["password"],
+        host=db_config["host"],
+        port=db_config["port"]
     )
 
     file_path = "path_to_your_json_file.json"
