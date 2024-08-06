@@ -1,6 +1,7 @@
 import json
 from db_connection import get_db_connection
-from table_operations import ensure_columns, insert_data, initialize_table
+from table_operations import ensure_columns, insert_data
+from table_initialization import initialize_table
 import logging
 
 # Configuração do logging

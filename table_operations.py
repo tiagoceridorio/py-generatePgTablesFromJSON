@@ -2,23 +2,14 @@ import json
 from psycopg2 import sql
 from schema_utils import get_column_definitions, process_value
 import logging
-
-def drop_table(cursor, table_name):
-    drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
-    logging.info(f"Dropping table with query: {drop_table_query}")
-    cursor.execute(drop_table_query)
-
-def create_table(cursor, table_name, columns):
-    column_defs = ", ".join([f"{col} {dtype}" for col, dtype in columns.items()])
-    create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_defs});"
-    logging.info(f"Creating table with query: {create_table_query}")
-    cursor.execute(create_table_query)
+from table_initialization import create_table  # Importando a função create_table
 
 def add_columns(cursor, table_name, columns):
     for col, dtype in columns.items():
-        alter_table_query = f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col} {dtype};"
-        logging.info(f"Altering table with query: {alter_table_query}")
-        cursor.execute(alter_table_query)
+        if '$' not in col:
+            alter_table_query = f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col} {dtype};"
+            logging.info(f"Altering table with query: {alter_table_query}")
+            cursor.execute(alter_table_query)
 
 def ensure_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
@@ -26,8 +17,8 @@ def ensure_columns(cursor, table_name, json_obj):
     return columns
 
 def insert_data(cursor, table_name, json_obj):
-    columns = [key.lower() for key in json_obj.keys()]
-    values = [process_value(value) for value in json_obj.values()]
+    columns = [key.lower() for key in json_obj.keys() if '$' not in key]
+    values = [process_value(value) for key, value in json_obj.items() if '$' not in key]
     insert_query = sql.SQL("INSERT INTO {table} ({fields}) VALUES ({values})").format(
         table=sql.Identifier(table_name),
         fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
@@ -36,35 +27,20 @@ def insert_data(cursor, table_name, json_obj):
     logging.info(f"Inserting data with query: {insert_query.as_string(cursor)}")
     cursor.execute(insert_query, values)
 
-def initialize_table(cursor, table_name):
-    columns = {
-        "_id": "VARCHAR",
-        "cartid": "VARCHAR",
-        "ismobile": "BOOLEAN",
-        "ip": "TEXT",
-        "store": "JSONB",
-        "customer": "JSONB",
-        "sellers": "JSONB",
-        "items": "JSONB",
-        "volumes": "JSONB",
-        "payment": "JSONB",
-        "refundrules": "JSONB",
-        "stateregistration": "TEXT",
-        "createdinadmin": "BOOLEAN",
-        "adminid": "TEXT",
-        "ordersiteid": "TEXT",
-        "date": "TIMESTAMP",
-        "documenttype": "TEXT",
-        "iscrisis": "BOOLEAN",
-        "iscrisismarketing": "BOOLEAN",
-        "isinternational": "BOOLEAN",
-        "itemscount": "INT",
-        "ordersource": "TEXT",
-        "searchkey": "TEXT",
-        "status": "TEXT",
-        "values": "JSONB",
-        "cubbo": "JSONB",
-        "history": "JSONB"
-    }
-    drop_table(cursor, table_name)
-    create_table(cursor, table_name, columns)
+    for key, value in json_obj.items():
+        if isinstance(value, dict) and '$' not in key:
+            nested_table_name = f"{table_name}_{key}"
+            create_and_insert_nested_data(cursor, nested_table_name, value, json_obj.get('_id'))
+        elif isinstance(value, list):
+            for item in value:
+                nested_table_name = f"{table_name}_{key}"
+                create_and_insert_nested_data(cursor, nested_table_name, item, json_obj.get('_id'))
+
+def create_and_insert_nested_data(cursor, table_name, json_obj, parent_id):
+    if not isinstance(json_obj, dict):
+        return
+    
+    json_obj['_parent_id'] = parent_id['$oid'] if parent_id and '$oid' in parent_id else parent_id
+    columns = get_column_definitions(json_obj)
+    create_table(cursor, table_name, columns)  # Garantindo que a tabela seja criada antes da inserção
+    insert_data(cursor, table_name, json_obj)

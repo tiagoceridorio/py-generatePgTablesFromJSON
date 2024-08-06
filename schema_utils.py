@@ -5,6 +5,8 @@ from datetime import datetime
 def get_column_definitions(json_obj):
     columns = {}
     for key, value in json_obj.items():
+        if '$' in key:
+            continue
         column_name = key.lower()
         if isinstance(value, dict) and "$oid" in value:
             columns[column_name] = "VARCHAR"
@@ -18,7 +20,7 @@ def get_column_definitions(json_obj):
             columns[column_name] = "FLOAT"
         elif isinstance(value, str):
             columns[column_name] = "TEXT"
-        elif isinstance(value, list):
+        elif isinstance(value, list) or isinstance(value, dict):
             columns[column_name] = "JSONB"
         else:
             columns[column_name] = "JSONB"
