@@ -31,7 +31,10 @@ def get_column_definitions(json_obj):
 
 def process_value(value):
     if isinstance(value, dict) and "$date" in value:
-        return datetime.fromisoformat(value["$date"].replace("Z", "+00:00"))
+        try:
+            return datetime.fromisoformat(value["$date"].replace("Z", "+00:00"))
+        except ValueError:
+            return value["$date"]
     elif isinstance(value, dict) or isinstance(value, list):
         return json.dumps(value)
     return value
