@@ -1,22 +1,25 @@
 import json
+import logging
 
 def get_column_definitions(json_obj):
     columns = {}
     for key, value in json_obj.items():
+        column_name = key.lower()
         if isinstance(value, dict) and "$oid" in value:
-            columns[key] = "VARCHAR"
+            columns[column_name] = "VARCHAR"
         elif isinstance(value, dict) and "$date" in value:
-            columns[key] = "TIMESTAMP"
+            columns[column_name] = "TIMESTAMP"
         elif isinstance(value, bool):
-            columns[key] = "BOOLEAN"
+            columns[column_name] = "BOOLEAN"
         elif isinstance(value, int):
-            columns[key] = "INT"
+            columns[column_name] = "INT"
         elif isinstance(value, float):
-            columns[key] = "FLOAT"
+            columns[column_name] = "FLOAT"
         elif isinstance(value, str):
-            columns[key] = "TEXT"
+            columns[column_name] = "TEXT"
         elif isinstance(value, list):
-            columns[key] = "JSONB"
+            columns[column_name] = "JSONB"
         else:
-            columns[key] = "JSONB"
+            columns[column_name] = "JSONB"
+    logging.info(f"Generated columns: {columns}")
     return columns

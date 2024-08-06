@@ -1,6 +1,10 @@
 import json
 from db_connection import get_db_connection
 from table_operations import ensure_columns, insert_data
+import logging
+
+# Configuração do logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def process_json_file(file_path, conn):
     with open(file_path, 'r') as file:
@@ -14,7 +18,7 @@ def process_json_file(file_path, conn):
 def process_json_record(record, conn):
     table_name = "orders"  # Você pode mudar isso para um nome de tabela mais apropriado
     with conn.cursor() as cursor:
-        columns = ensure_columns(cursor, table_name, record)
+        ensure_columns(cursor, table_name, record)  # Certifique-se de que todas as colunas necessárias são criadas
         insert_data(cursor, table_name, record)
     conn.commit()
 
