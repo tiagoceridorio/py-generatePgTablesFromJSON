@@ -49,11 +49,13 @@ def insert_data(cursor, table_name, json_obj):
     for key, value in json_obj.items():
         if isinstance(value, dict) and '$' not in key and key not in ["_id", "cartId"]:
             nested_table_name = f"{table_name.lower()}_{key.lower()}"
+            logging.info(f"Ensuring table and columns for nested table: {nested_table_name}")
             ensure_table_and_columns(cursor, nested_table_name, value)
             insert_nested_data(cursor, nested_table_name, value, json_obj.get('_id'))
         elif isinstance(value, list):
             for item in value:
                 nested_table_name = f"{table_name.lower()}_{key.lower()}"
+                logging.info(f"Ensuring table and columns for nested table: {nested_table_name}")
                 ensure_table_and_columns(cursor, nested_table_name, item)
                 insert_nested_data(cursor, nested_table_name, item, json_obj.get('_id'))
 

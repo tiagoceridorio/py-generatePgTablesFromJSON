@@ -6,19 +6,33 @@ import logging
 # Configuração do logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def process_json_file(file_path, conn):
+def create_tables_for_all_records(file_path, conn):
     with open(file_path, 'r') as file:
         data = json.load(file)
         if isinstance(data, list):
             for record in data:
-                process_json_record(record, conn)
+                create_tables_for_record(record, conn)
         else:
-            process_json_record(data, conn)
+            create_tables_for_record(data, conn)
 
-def process_json_record(record, conn):
-    table_name = "orders"  # Você pode mudar isso para um nome de tabela mais apropriado
+def create_tables_for_record(record, conn):
+    table_name = "orders"
     with conn.cursor() as cursor:
-        ensure_table_and_columns(cursor, table_name, record)  # Certifique-se de que todas as colunas necessárias são criadas
+        ensure_table_and_columns(cursor, table_name, record)
+    conn.commit()
+
+def insert_data_for_all_records(file_path, conn):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+        if isinstance(data, list):
+            for record in data:
+                insert_data_for_record(record, conn)
+        else:
+            insert_data_for_record(data, conn)
+
+def insert_data_for_record(record, conn):
+    table_name = "orders"
+    with conn.cursor() as cursor:
         insert_data(cursor, table_name, record)
     conn.commit()
 
@@ -27,7 +41,13 @@ def main():
     conn = get_db_connection(config_file)
 
     file_path = "path_to_your_json_file.json"
-    process_json_file(file_path, conn)
+    
+    # Primeiro passo: criar tabelas
+    create_tables_for_all_records(file_path, conn)
+    
+    # Segundo passo: inserir dados
+    insert_data_for_all_records(file_path, conn)
+    
     conn.close()
 
 if __name__ == "__main__":
