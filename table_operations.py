@@ -2,7 +2,6 @@ import json
 from psycopg2 import sql
 from schema_utils import get_column_definitions, process_value
 import logging
-from table_initialization import create_table  # Importando a função create_table
 
 def add_columns(cursor, table_name, columns):
     for col, dtype in columns.items():
@@ -30,17 +29,15 @@ def insert_data(cursor, table_name, json_obj):
     for key, value in json_obj.items():
         if isinstance(value, dict) and '$' not in key:
             nested_table_name = f"{table_name}_{key}"
-            create_and_insert_nested_data(cursor, nested_table_name, value, json_obj.get('_id'))
+            insert_nested_data(cursor, nested_table_name, value, json_obj.get('_id'))
         elif isinstance(value, list):
             for item in value:
                 nested_table_name = f"{table_name}_{key}"
-                create_and_insert_nested_data(cursor, nested_table_name, item, json_obj.get('_id'))
+                insert_nested_data(cursor, nested_table_name, item, json_obj.get('_id'))
 
-def create_and_insert_nested_data(cursor, table_name, json_obj, parent_id):
+def insert_nested_data(cursor, table_name, json_obj, parent_id):
     if not isinstance(json_obj, dict):
         return
-    
+
     json_obj['_parent_id'] = parent_id['$oid'] if parent_id and '$oid' in parent_id else parent_id
-    columns = get_column_definitions(json_obj)
-    create_table(cursor, table_name, columns)  # Garantindo que a tabela seja criada antes da inserção
     insert_data(cursor, table_name, json_obj)

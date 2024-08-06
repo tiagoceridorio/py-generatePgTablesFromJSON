@@ -27,9 +27,13 @@ def main():
     config_file = "config.json"
     conn = get_db_connection(config_file)
 
-    # Inicializa a tabela uma vez ao rodar o script
+    # Inicializa a tabela principal e tabelas aninhadas
     with conn.cursor() as cursor:
-        initialize_table(cursor, "orders")
+        with open("path_to_your_json_file.json", 'r') as file:
+            sample_record = json.load(file)
+            if isinstance(sample_record, list):
+                sample_record = sample_record[0]
+            initialize_table(cursor, "orders", sample_record)
     conn.commit()
 
     file_path = "path_to_your_json_file.json"
