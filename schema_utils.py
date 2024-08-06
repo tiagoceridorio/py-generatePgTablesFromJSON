@@ -20,8 +20,9 @@ def get_column_definitions(json_obj):
             columns[column_name] = "FLOAT"
         elif isinstance(value, str):
             columns[column_name] = "TEXT"
+        # Skip list or dict types as they will be handled as separate tables
         elif isinstance(value, list) or isinstance(value, dict):
-            columns[column_name] = "JSONB"  # Create JSONB column for objects and arrays
+            continue
         else:
             columns[column_name] = "TEXT"  # Default to TEXT for unknown types
     logging.info(f"Generated columns: {columns}")
