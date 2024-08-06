@@ -12,7 +12,6 @@ def add_columns(cursor, table_name, columns):
 
 def ensure_table_and_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
-    columns['_parent_id'] = "VARCHAR"
     create_table_if_not_exists(cursor, table_name, columns)
     add_columns(cursor, table_name, columns)
     return columns
@@ -28,8 +27,8 @@ def ensure_columns(cursor, table_name, json_obj):
 
 def insert_data(cursor, table_name, json_obj):
     ensure_columns(cursor, table_name, json_obj)
-    columns = [key.lower() for key in json_obj.keys() if '$' not in key and key not in ["_id", "cartId"]]
-    values = [process_value(value) for key, value in json_obj.items() if '$' not in key and key not in ["_id", "cartId"]]
+    columns = [key.lower() for key in json_obj.keys() if '$' not in key and key not in ["_id", "cartId"] and not isinstance(json_obj[key], (dict, list))]
+    values = [process_value(value) for key, value in json_obj.items() if '$' not in key and key not in ["_id", "cartId"] and not isinstance(json_obj[key], (dict, list))]
     
     if '_id' in json_obj:
         columns.append('_id')

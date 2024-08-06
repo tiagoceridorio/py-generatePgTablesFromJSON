@@ -6,12 +6,13 @@ import logging
 # Configuração do logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def create_tables_for_all_records(file_path, conn):
+def create_tables_for_all_records(file_path, conn, sample_rate=100):
     with open(file_path, 'r') as file:
         data = json.load(file)
         if isinstance(data, list):
-            for record in data:
-                create_tables_for_record(record, conn)
+            for i, record in enumerate(data):
+                if i % sample_rate == 0:
+                    create_tables_for_record(record, conn)
         else:
             create_tables_for_record(data, conn)
 
@@ -43,7 +44,7 @@ def main():
     file_path = "path_to_your_json_file.json"
     
     # Primeiro passo: criar tabelas
-    create_tables_for_all_records(file_path, conn)
+    create_tables_for_all_records(file_path, conn, sample_rate=100)
     
     # Segundo passo: inserir dados
     insert_data_for_all_records(file_path, conn)
