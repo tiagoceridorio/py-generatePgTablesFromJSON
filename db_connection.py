@@ -18,7 +18,8 @@ def get_db_connection(config_file):
             user=db_config["user"],
             password=db_config["password"],
             host=db_config["host"],
-            port=db_config["port"]
+            port=db_config["port"],
+            options='-c client_encoding=UTF8'
         )
         logging.info("Conexão com o banco de dados PostgreSQL estabelecida com sucesso.")
         return conn
