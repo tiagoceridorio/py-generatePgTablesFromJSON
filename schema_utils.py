@@ -2,6 +2,8 @@ import json
 import logging
 from datetime import datetime
 
+logger = logging.getLogger(__name__)
+
 def get_column_definitions(json_obj):
     columns = {}
     for key, value in json_obj.items():
@@ -24,7 +26,7 @@ def get_column_definitions(json_obj):
             columns[column_name] = "JSONB"
         else:
             columns[column_name] = "JSONB"
-    logging.info(f"Generated columns: {columns}")
+    logger.info(f"Generated columns: {columns}")
     return columns
 
 def process_value(value):

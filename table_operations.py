@@ -1,24 +1,38 @@
 import json
-from psycopg2 import sql
+from psycopg2 import sql, DatabaseError
 from schema_utils import get_column_definitions, process_value
 import logging
+
+logger = logging.getLogger(__name__)
 
 def add_columns(cursor, table_name, columns):
     for col, dtype in columns.items():
         if '$' not in col:
-            alter_table_query = f"ALTER TABLE {table_name.lower()} ADD COLUMN IF NOT EXISTS {col.lower()} {dtype};"
-            logging.info(f"Altering table with query: {alter_table_query}")
-            cursor.execute(alter_table_query)
+            try:
+                alter_table_query = f"ALTER TABLE {table_name.lower()} ADD COLUMN IF NOT EXISTS {col.lower()} {dtype};"
+                logger.info(f"Altering table with query: {alter_table_query}")
+                cursor.execute(alter_table_query)
+            except Exception as e:
+                logger.error(f"Error altering table {table_name}: {e}")
+                raise
 
 def ensure_table_and_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
-    create_table_if_not_exists(cursor, table_name, columns)
-    add_columns(cursor, table_name, columns)
+    try:
+        create_table_if_not_exists(cursor, table_name, columns)
+    except Exception as e:
+        logger.error(f"Error creating table {table_name}: {e}")
+        raise
+    try:
+        add_columns(cursor, table_name, columns)
+    except Exception as e:
+        logger.error(f"Error adding columns to table {table_name}: {e}")
+        raise
     return columns
 
 def create_table_if_not_exists(cursor, table_name, columns):
     create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name.lower()} ({', '.join([f'{col.lower()} {dtype}' for col, dtype in columns.items()])});"
-    logging.info(f"Creating table with query: {create_table_query}")
+    logger.info(f"Creating table with query: {create_table_query}")
     cursor.execute(create_table_query)
 
 def ensure_columns(cursor, table_name, json_obj):
@@ -42,19 +56,23 @@ def insert_data(cursor, table_name, json_obj):
         fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
         values=sql.SQL(", ").join(sql.Placeholder() * len(values))
     )
-    logging.info(f"Inserting data with query: {insert_query.as_string(cursor)}")
-    cursor.execute(insert_query, values)
+    try:
+        logger.info(f"Inserting data with query: {insert_query.as_string(cursor)}")
+        cursor.execute(insert_query, values)
+    except Exception as e:
+        logger.error(f"Error inserting data into table {table_name}: {e}")
+        raise
 
     for key, value in json_obj.items():
         if isinstance(value, dict) and '$' not in key and key not in ["_id", "cartId"]:
             nested_table_name = f"{table_name.lower()}_{key.lower()}"
-            logging.info(f"Ensuring table and columns for nested table: {nested_table_name}")
+            logger.info(f"Ensuring table and columns for nested table: {nested_table_name}")
             ensure_table_and_columns(cursor, nested_table_name, value)
             insert_nested_data(cursor, nested_table_name, value, json_obj.get('_id'))
         elif isinstance(value, list):
             for item in value:
                 nested_table_name = f"{table_name.lower()}_{key.lower()}"
-                logging.info(f"Ensuring table and columns for nested table: {nested_table_name}")
+                logger.info(f"Ensuring table and columns for nested table: {nested_table_name}")
                 ensure_table_and_columns(cursor, nested_table_name, item)
                 insert_nested_data(cursor, nested_table_name, item, json_obj.get('_id'))
 
