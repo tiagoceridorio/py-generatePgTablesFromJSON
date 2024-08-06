@@ -16,15 +16,17 @@ def create_table(cursor, table_name, columns):
 def get_nested_table_definitions(base_table, json_obj):
     nested_tables = {}
     for key, value in json_obj.items():
-        if isinstance(value, dict) and '$' not in key and key != "_id":
+        if isinstance(value, dict) and '$' not in key and key not in ["_id", "cartId"]:
             nested_table_name = f"{base_table.lower()}_{key.lower()}"
             nested_tables[nested_table_name] = get_column_definitions(value)
+            nested_tables[nested_table_name]['_parent_id'] = "VARCHAR"  # Adiciona a coluna _parent_id para todas as tabelas aninhadas
             nested_tables.update(get_nested_table_definitions(nested_table_name, value))
         elif isinstance(value, list):
             for item in value:
                 if isinstance(item, dict):
                     nested_table_name = f"{base_table.lower()}_{key.lower()}"
                     nested_tables[nested_table_name] = get_column_definitions(item)
+                    nested_tables[nested_table_name]['_parent_id'] = "VARCHAR"  # Adiciona a coluna _parent_id para todas as tabelas aninhadas
                     nested_tables.update(get_nested_table_definitions(nested_table_name, item))
     return nested_tables
 
