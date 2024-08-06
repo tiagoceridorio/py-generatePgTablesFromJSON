@@ -3,6 +3,11 @@ from psycopg2 import sql
 from schema_utils import get_column_definitions
 import logging
 
+def drop_table(cursor, table_name):
+    drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
+    logging.info(f"Dropping table with query: {drop_table_query}")
+    cursor.execute(drop_table_query)
+
 def create_table(cursor, table_name, columns):
     column_defs = ", ".join([f"{col} {dtype}" for col, dtype in columns.items()])
     create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_defs});"
@@ -17,6 +22,7 @@ def add_columns(cursor, table_name, columns):
 
 def ensure_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
+    drop_table(cursor, table_name)  # Drop the table if it exists
     create_table(cursor, table_name, columns)  # Certifique-se de que a tabela é criada antes de adicionar colunas
     add_columns(cursor, table_name, columns)
     return columns
