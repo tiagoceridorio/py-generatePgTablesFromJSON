@@ -20,13 +20,9 @@ def ensure_table_and_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
     try:
         create_table_if_not_exists(cursor, table_name, columns)
-    except Exception as e:
-        logger.error(f"Error creating table {table_name}: {e}")
-        raise
-    try:
         add_columns(cursor, table_name, columns)
     except Exception as e:
-        logger.error(f"Error adding columns to table {table_name}: {e}")
+        logger.error(f"Error ensuring table and columns for {table_name}: {e}")
         raise
     return columns
 
