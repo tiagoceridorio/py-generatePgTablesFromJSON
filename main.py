@@ -1,7 +1,6 @@
 import json
 from db_connection import get_db_connection
 from table_operations import ensure_table_and_columns, insert_data
-from table_initialization import initialize_table
 import logging
 
 # Configuração do logging
@@ -26,15 +25,6 @@ def process_json_record(record, conn):
 def main():
     config_file = "config.json"
     conn = get_db_connection(config_file)
-
-    # Inicializa a tabela principal e tabelas aninhadas
-    with conn.cursor() as cursor:
-        with open("path_to_your_json_file.json", 'r') as file:
-            sample_record = json.load(file)
-            if isinstance(sample_record, list):
-                sample_record = sample_record[0]
-            initialize_table(cursor, "orders", sample_record)
-    conn.commit()
 
     file_path = "path_to_your_json_file.json"
     process_json_file(file_path, conn)
