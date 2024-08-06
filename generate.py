@@ -7,6 +7,11 @@ def create_table(cursor, table_name, columns):
     create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_defs});"
     cursor.execute(create_table_query)
 
+def add_columns(cursor, table_name, columns):
+    for col, dtype in columns.items():
+        alter_table_query = f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col} {dtype};"
+        cursor.execute(alter_table_query)
+
 def get_column_definitions(json_obj):
     columns = {}
     for key, value in json_obj.items():
@@ -52,6 +57,7 @@ def process_json_record(record, conn):
     columns = get_column_definitions(record)
     with conn.cursor() as cursor:
         create_table(cursor, table_name, columns)
+        add_columns(cursor, table_name, columns)  # Ensure all columns are added
         insert_data(cursor, table_name, record)
     conn.commit()
 
