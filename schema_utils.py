@@ -2,8 +2,6 @@ import json
 import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
-
 def get_column_definitions(json_obj):
     columns = {}
     for key, value in json_obj.items():
@@ -22,9 +20,11 @@ def get_column_definitions(json_obj):
             columns[column_name] = "FLOAT"
         elif isinstance(value, str):
             columns[column_name] = "TEXT"
+        elif isinstance(value, list) or isinstance(value, dict):
+            columns[column_name] = "JSONB"  # Create JSONB column for objects and arrays
         else:
-            columns[column_name] = "JSONB"
-    logger.info(f"Generated columns: {columns}")
+            columns[column_name] = "TEXT"  # Default to TEXT for unknown types
+    logging.info(f"Generated columns: {columns}")
     return columns
 
 def process_value(value):

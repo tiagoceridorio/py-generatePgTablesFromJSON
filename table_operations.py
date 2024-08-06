@@ -7,14 +7,13 @@ logger = logging.getLogger(__name__)
 
 def add_columns(cursor, table_name, columns):
     for col, dtype in columns.items():
-        if dtype != "JSONB":  # Ignore JSONB columns as they are transformed into separate tables
-            try:
-                alter_table_query = f"ALTER TABLE {table_name.lower()} ADD COLUMN IF NOT EXISTS {col.lower()} {dtype};"
-                logger.info(f"Altering table with query: {alter_table_query}")
-                cursor.execute(alter_table_query)
-            except Exception as e:
-                logger.error(f"Error altering table {table_name}: {e}")
-                raise
+        try:
+            alter_table_query = f"ALTER TABLE {table_name.lower()} ADD COLUMN IF NOT EXISTS {col.lower()} {dtype};"
+            logger.info(f"Altering table with query: {alter_table_query}")
+            cursor.execute(alter_table_query)
+        except Exception as e:
+            logger.error(f"Error altering table {table_name}: {e}")
+            raise
 
 def ensure_table_and_columns(cursor, table_name, json_obj):
     columns = get_column_definitions(json_obj)
@@ -27,7 +26,7 @@ def ensure_table_and_columns(cursor, table_name, json_obj):
     return columns
 
 def create_table_if_not_exists(cursor, table_name, columns):
-    create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name.lower()} ({', '.join([f'{col.lower()} {dtype}' for col, dtype in columns.items() if dtype != 'JSONB'])});"
+    create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name.lower()} ({', '.join([f'{col.lower()} {dtype}' for col, dtype in columns.items()])});"
     logger.info(f"Creating table with query: {create_table_query}")
     cursor.execute(create_table_query)
 
@@ -37,8 +36,8 @@ def ensure_columns(cursor, table_name, json_obj):
 
 def insert_data(cursor, table_name, json_obj):
     ensure_columns(cursor, table_name, json_obj)
-    columns = [key.lower() for key in json_obj.keys() if '$' not in key and key not in ["_id", "cartId"] and not (isinstance(json_obj[key], dict) and "$date" in json_obj[key]) and not isinstance(json_obj[key], (dict, list))]
-    values = [process_value(value) for key, value in json_obj.items() if '$' not in key and key not in ["_id", "cartId"] and not (isinstance(json_obj[key], dict) and "$date" in json_obj[key]) and not isinstance(json_obj[key], (dict, list))]
+    columns = [key.lower() for key in json_obj.keys() if '$' not in key and key not in ["_id", "cartId"]]
+    values = [process_value(value) for key, value in json_obj.items() if '$' not in key and key not in ["_id", "cartId"]]
 
     if '_id' in json_obj:
         columns.append('_id')
