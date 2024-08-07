@@ -33,7 +33,7 @@ def main():
     config_file = "config.json"
     conn = get_db_connection(config_file)
 
-    file_path = "path_to_your_json_file.json"
+    file_path = "path_to_updated_json_file.json"
     
     process_json_file(file_path, conn)
     
