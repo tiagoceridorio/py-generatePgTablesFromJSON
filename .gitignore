@@ -163,3 +163,4 @@ cython_debug/
 
 config.json
 path_to_your_json_file.json
+path_to_updated_json_file.json
